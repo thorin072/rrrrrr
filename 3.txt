@@ -1,0 +1,75 @@
+#!/bin/bash
+#
+# Назначение скрипта
+#
+# chkconfig: 345 10 90
+# description: Описание службы
+#
+
+# Загрузка библиотеки стандартных функций.
+. /etc/init.d/functions
+
+# Проверка наличия конфигурационного файла сети
+if [ ! -f /etc/sysconfig/network ]; then
+   exit 0
+fi
+
+# Загрузка конфигурационного файла сети
+. /etc/sysconfig/network
+
+# Проверка наличия конфигурационного файла данной службы
+if [ -f /etc/sysconfig/3_4742_polyakov_1 ]; then
+   . /etc/sysconfig/3_4742_polyakov_1
+fi
+
+# Проверка: разрешена ли сеть ?
+[ "${NETWORKING}" = "no" ] && exit 0
+
+# Проверка наличия исполнительных файлов необходимых для запуска службы.
+[ -x /etc/rc.d/init.d/3_4742_polyakov_1 ] || exit 1
+
+# Обработка команд управления службой
+
+case "$1" in
+
+start)
+  # Запуск службы
+  # Активировать виртуальный интерфейс enp0s8 с параметрами из
+  # файла конфигурации
+  ifconfig enp0s8 ${IPADDR} netmask ${NETMASK} up;
+  echo 1 >/proc/sys/net/ipv4/ip_forward
+;;
+
+stop)
+  # Остановка службы
+  # Деактивировать виртуальный интерфейс enp0s8 с
+  # параметрами из файла конфигурации
+  ifconfig enp0s8 ${IPADDR} netmask ${NETMASK} down;
+  echo 0 >/proc/sys/net/ipv4/ip_forward
+;;
+
+status)
+  # Вывод параметров сетевых устройств
+  # Вывод статических маршрутов
+  ifconfig enp0s8 && route | grep enp0s8 && cat /proc/sys/net/ipv4/ip_forward
+  
+;;
+
+restart|reload)
+  # Перезапуск службы
+  $0 stop
+  $0 start
+;;
+
+*)
+  # Вывод справки по командам службы
+  echo $"Usage: $0 {start|stop|restart|reload|status}"
+
+  # Выход с кодом 1
+  #
+  exit 1
+
+esac
+
+# Выход с кодом 0
+exit 0

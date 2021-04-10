@@ -1,0 +1,3 @@
+NETWORKING=yes
+HOSTNAME=lsrv.example.com
+GATEWAY=10.0.0.1
